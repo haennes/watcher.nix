@@ -241,12 +241,13 @@ in
             optionalString (match.exclude != null) "--exclude ${match.exclude}"
           } ${
             optionalString (match.excludei != null) "--excludei ${match.excludei}"
-          } --format '%w%0%f%0%w%f%0%e%0%T' --timefmt "%F %T %s" | while IFS= read -r -d \'\' line; do
-            export dir=${cut 1}
-            export file=${cut 2}
-            export dir_file=${cut 3}
-            export event=${cut 4}
-            export time=${cut 5}
+          } --format '%w%0%f%0%w%f%0%e%0%T' --timefmt "%F %T %s" | while IFS= read -r -d ''' line; do
+            echo "$line" > /tmp/fs-watcher-logs
+            export dir=${cut 2}
+            export file=${cut 3}
+            export dir_file=${cut 4}
+            export event=${cut 5}
+            export time=${cut 6}
             pushd $dir
               ${finalCommand}
             popd
@@ -266,9 +267,10 @@ in
               wantedBy = [ "multi-user.target" ];
               after = [ "local-fs.target" ];
               serviceConfig = {
-                Type = "notify";
-                User = value.user;
+                Type = "simple";
                 ExecStart = "${commandScript (value // { inherit folderName name; })}";
+                RemainAfterExit = "no";
+                User = value.user;
               };
             };
           }
