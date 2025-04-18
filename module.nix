@@ -205,6 +205,7 @@ in
   };
   config =
     let
+      delim = "_:_:_:_:_"; # this string must never!! be present in file names
       commandScript =
         {
           command,
@@ -217,7 +218,7 @@ in
         }:
         let
           eventsOpts = map (name: "-e ${name}") (attrNames (filterAttrs (_: set: set.enable) notifications));
-          cut = col: ''$(echo -ne "$REPLY" | cut -d $'\0' -f ${toString col})'';
+          cut = col: ''$(echo -ne "$REPLY" | awk -F "${delim}" -v field=${toString col} '{print $field}') '';
           commandFmt = "${command} $dir $file $dir_file $time";
           finalCommand =
             if ifOutputOlder != null then
@@ -225,7 +226,7 @@ in
                 output_name=$(${ifOutputOlder} $dir $file $dir_file $time)
                 tmpdir=$(mktemp -d)
                 echo "$output_name: $dir_file" >> $tmpdir/Makefile
-                echo "    ${command} "$dir" "$file" "$dir" "$dif_file" "$time"" >> $tmpdir/Makefile
+                echo "    ${command} "$dir" "$file" "$dif_file" "$time"" >> $tmpdir/Makefile
                 ${pkgs.gnumake} -f $tmpdir/Makefile $output_name
                 echo "Makefile created in $tmpdir"
                 #rm -rf $tmpdir
@@ -241,13 +242,13 @@ in
             optionalString (match.exclude != null) "--exclude ${match.exclude}"
           } ${
             optionalString (match.excludei != null) "--excludei ${match.excludei}"
-          } --format '%w%0%f%0%w%f%0%e%0%T' --timefmt "%F %T %s" | while IFS= read; do
+          } --format '%w${delim}%f${delim}%w%f${delim}%e${delim}%T' --timefmt "%F %T %s" | while IFS= read; do
             echo "$REPLY" > /tmp/fs-watcher-logs
-            export dir=${cut 2}
-            export file=${cut 3}
-            export dir_file=${cut 4}
-            export event=${cut 5}
-            export time=${cut 6}
+            export dir=${cut 1}
+            export file=${cut 2}
+            export dir_file=${cut 3}
+            export event=${cut 4}
+            export time=${cut 5}
             pushd $dir
               ${finalCommand}
             popd
