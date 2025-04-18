@@ -240,7 +240,7 @@ in
             optionalString (match.exclude != null) "--exclude ${match.exclude}"
           } ${
             optionalString (match.excludei != null) "--excludei ${match.excludei}"
-          } --format '%w%0%f%0%w%f%0%e%0%T' | while IFS= read -r -d \'\' line; do
+          } --format '%w%0%f%0%w%f%0%e%0%T' --timefmt "%F %T %s" | while IFS= read -r -d \'\' line; do
             export dir=${cut 1}
             export file=${cut 2}
             export dir_file=${cut 3}
