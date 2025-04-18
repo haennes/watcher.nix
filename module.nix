@@ -157,8 +157,7 @@ in
     else commandFmt;
     in pkgs.writeShellScript name ''
       echo "file updated: $1" > "/tmp/fs-watcher-logs"
-      ${pkgs.inotify-tools}/bin/inotifywait -m ${concatStringsSep " " eventsOpts} ${optionalString (match.include != null) "--include ${match.include}"} ${optionalString (match.includei != null) "--includei ${match.includei}"} ${optionalString (match.exclude != null) "--exclude ${match.exclude}"} ${optionalString (match.excludei != null) "--excludei ${match.excludei}"} --format '%w%0%f%0%w%f%0%e%0%T'
-        | while IFS= read -r -d \'\' line; do
+      ${pkgs.inotify-tools}/bin/inotifywait -m ${concatStringsSep " " eventsOpts} ${optionalString (match.include != null) "--include ${match.include}"} ${optionalString (match.includei != null) "--includei ${match.includei}"} ${optionalString (match.exclude != null) "--exclude ${match.exclude}"} ${optionalString (match.excludei != null) "--excludei ${match.excludei}"} --format '%w%0%f%0%w%f%0%e%0%T' | while IFS= read -r -d \'\' line; do
         export dir=${cut 1}
         export file=${cut 2}
         export dir_file=${cut 3}
@@ -167,6 +166,7 @@ in
         pushd $dir
           ${finalCommand}
         popd
+        done
     '';
   in
   {
