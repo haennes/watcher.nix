@@ -148,7 +148,7 @@ in
       output_name=$(${ifOutputOlder} $dir $file $dir_file $time)
       tmpdir=$(mktemp -d)
       echo "$output_name: $dir_file" >> $tmpdir/Makefile
-      echo "    ${command} \$\{dir\} \$\{file\} \$\{dir\} \$\{dif_file\} \$\{time\}" >> $tmpdir/Makefile
+      echo "    ${command} "$dir" "$file" "$dir" "$dif_file" "$time"" >> $tmpdir/Makefile
       ${pkgs.gnumake} -f $tmpdir/Makefile $output_name
       echo "Makefile created in $tmpdir"
       #rm -rf $tmpdir
