@@ -218,7 +218,9 @@ in
         }:
         let
           eventsOpts = map (name: "-e ${name}") (attrNames (filterAttrs (_: set: set.enable) notifications));
-          cut = col: ''$(echo -ne "$REPLY" | awk -F "${delim}" -v field=${toString col} '{print $field}') '';
+          cut =
+            col:
+            ''$(echo -ne "$REPLY" | ${pkgs.gawk}/bin/awk -F "${delim}" -v field=${toString col} '{print $field}') '';
           commandFmt = "${command} $dir $file $dir_file $time";
           finalCommand =
             if ifOutputOlder != null then
@@ -226,29 +228,30 @@ in
                 output_name=$(${ifOutputOlder} $dir $file $dir_file $time)
                 tmpdir=$(mktemp -d)
                 echo "$output_name: $dir_file" >> $tmpdir/Makefile
-                echo "    ${command} "$dir" "$file" "$dif_file" "$time"" >> $tmpdir/Makefile
-                ${pkgs.gnumake} -f $tmpdir/Makefile $output_name
+                echo -e "\t${command} "$dir" "$file" "$dir_file" "$time"" >> $tmpdir/Makefile
+                ${pkgs.gnumake}/bin/make -f $tmpdir/Makefile $output_name
                 echo "Makefile created in $tmpdir"
                 #rm -rf $tmpdir
               ''
             else
               commandFmt;
         in
+        #FIXME add more time information without using colons as this trips up Make
         pkgs.writeShellScript name ''
-          echo "file updated: $1" > "/tmp/fs-watcher-logs"
           ${pkgs.inotify-tools}/bin/inotifywait ${folderName} -m ${concatStringsSep " " eventsOpts} ${
             optionalString (match.include != null) "--include ${match.include}"
           } ${optionalString (match.includei != null) "--includei ${match.includei}"} ${
             optionalString (match.exclude != null) "--exclude ${match.exclude}"
           } ${
             optionalString (match.excludei != null) "--excludei ${match.excludei}"
-          } --format '%w${delim}%f${delim}%w%f${delim}%e${delim}%T' --timefmt "%F %T %s" | while IFS= read; do
-            echo "$REPLY" > /tmp/fs-watcher-logs
+          } --format '%w${delim}%f${delim}%w%f${delim}%e${delim}%T' --timefmt "%s" | while IFS= read; do
+            echo $REPLY
             export dir=${cut 1}
             export file=${cut 2}
             export dir_file=${cut 3}
             export event=${cut 4}
             export time=${cut 5}
+            echo "$dir $file $dir_file $event $time"
             pushd $dir
               ${finalCommand}
             popd
