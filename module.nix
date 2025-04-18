@@ -211,6 +211,7 @@ in
           notifications,
           ifOutputOlder,
           match,
+          folderName,
           name,
           ...
         }:
@@ -234,7 +235,7 @@ in
         in
         pkgs.writeShellScript name ''
           echo "file updated: $1" > "/tmp/fs-watcher-logs"
-          ${pkgs.inotify-tools}/bin/inotifywait -m ${concatStringsSep " " eventsOpts} ${
+          ${pkgs.inotify-tools}/bin/inotifywait ${folderName} -m ${concatStringsSep " " eventsOpts} ${
             optionalString (match.include != null) "--include ${match.include}"
           } ${optionalString (match.includei != null) "--includei ${match.includei}"} ${
             optionalString (match.exclude != null) "--exclude ${match.exclude}"
@@ -254,18 +255,24 @@ in
     in
     {
       systemd.services = lib.mkIf cfg.enable (
-        mapAttrs' (name: value: {
-          name = "watcher-${replaceStrings [ "/" ] [ "-" ] name}";
-          value = {
-            wantedBy = [ "multi-user.target" ];
-            after = [ "local-fs.target" ];
-            serviceConfig = {
-              Type = "notify";
-              User = value.user;
-              ExecStart = "${commandScript (value // { inherit name; })}";
+        mapAttrs' (
+          folderName: value:
+          let
+            name = "watcher-${replaceStrings [ "/" ] [ "-" ] folderName}";
+          in
+          {
+            inherit name;
+            value = {
+              wantedBy = [ "multi-user.target" ];
+              after = [ "local-fs.target" ];
+              serviceConfig = {
+                Type = "notify";
+                User = value.user;
+                ExecStart = "${commandScript (value // { inherit folderName name; })}";
+              };
             };
-          };
-        }) cfg.directories
+          }
+        ) cfg.directories
       );
     };
 }
