@@ -217,7 +217,7 @@ in
         }:
         let
           eventsOpts = map (name: "-e ${name}") (attrNames (filterAttrs (_: set: set.enable) notifications));
-          cut = col: ''$(echo -ne "$line" | cut -d $'\0' -f ${toString col})'';
+          cut = col: ''$(echo -ne "$REPLY" | cut -d $'\0' -f ${toString col})'';
           commandFmt = "${command} $dir $file $dir_file $time";
           finalCommand =
             if ifOutputOlder != null then
@@ -241,8 +241,8 @@ in
             optionalString (match.exclude != null) "--exclude ${match.exclude}"
           } ${
             optionalString (match.excludei != null) "--excludei ${match.excludei}"
-          } --format '%w%0%f%0%w%f%0%e%0%T' --timefmt "%F %T %s" | while IFS= read -r -d ''' line; do
-            echo "$line" > /tmp/fs-watcher-logs
+          } --format '%w%0%f%0%w%f%0%e%0%T' --timefmt "%F %T %s" | while IFS= read; do
+            echo "$REPLY" > /tmp/fs-watcher-logs
             export dir=${cut 2}
             export file=${cut 3}
             export dir_file=${cut 4}
