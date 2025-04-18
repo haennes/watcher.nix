@@ -82,6 +82,7 @@ in
               ifOutputOlder = mkOption {
                 type = nullOr str;
                 description = ''
+                  provide a path to a executable that when called outputs the path of the file that would be created
                   if provided use make to guarantee the
                   the output file is only updated if the input is newer
                 '';
