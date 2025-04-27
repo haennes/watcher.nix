@@ -214,6 +214,7 @@ in
           match,
           folderName,
           name,
+          recursive,
           ...
         }:
         let
@@ -244,6 +245,8 @@ in
             optionalString (match.exclude != null) "--exclude ${match.exclude}"
           } ${
             optionalString (match.excludei != null) "--excludei ${match.excludei}"
+          } ${
+            optionalString recursive "--recursive"
           } --format '%w${delim}%f${delim}%w%f${delim}%e${delim}%T' --timefmt "%s" | while IFS= read; do
             echo $REPLY
             export dir=${cut 1}
