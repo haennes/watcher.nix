@@ -237,8 +237,9 @@ in
                 echo "$output_name: $dir_file" >> $tmpdir/Makefile
                 echo -e "\t${command} "$dir" "$file" "$dir_file" "$time"" >> $tmpdir/Makefile
                 ${pkgs.gnumake}/bin/make -f $tmpdir/Makefile $output_name
-                echo "Makefile created in $tmpdir"
-                #rm -rf $tmpdir
+                echo "Makefile content"
+                cat $tmpdir/Makefile
+                rm -rf $tmpdir
               ''
             else
               commandFmt;
