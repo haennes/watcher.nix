@@ -9,8 +9,6 @@ let
   inherit (lib)
     mkEnableOption
     mkOption
-    mapAttrs'
-    head
     replaceStrings
     listToAttrs
     filterAttrs
@@ -25,8 +23,6 @@ let
     attrsOf
     submodule
     str
-    either
-    package
     passwdEntry
     nullOr
     bool
