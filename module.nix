@@ -30,6 +30,164 @@ let
     ;
   userNameType = passwdEntry str;
   mapListToAttrs = f: list: listToAttrs (map f list);
+  notifications =
+    innerCfg:
+    mapListToAttrs
+      (set: {
+
+        inherit (set) name;
+        value = {
+          enable = mkOption {
+            type = bool;
+            inherit (set) default;
+            description = ''
+              wether to watch for changes of kind:
+              ${set.description}
+            '';
+          };
+          command = mkOption {
+            type = str;
+            default = innerCfg.command;
+            description = ''
+              The command to execute on change:
+              ${set.description}
+              Defaults to the one defined one level above
+            '';
+          };
+
+        };
+      })
+      notifications
+      innerCfg
+      [
+        {
+          name = "access";
+          description = "file or directory contents were read";
+          default = false;
+        }
+        {
+          name = "modify";
+          description = "file or directory contents were written";
+          default = true;
+        }
+        {
+          name = "attrib";
+          description = "file or directory attributes changed";
+          default = false;
+        }
+        {
+          name = "close_write";
+          description = "file or directory closed, after being opened in writable mode";
+          default = true;
+        }
+        {
+          name = "close_nowrite";
+          description = "file or directory closed, after being opened in read-only mode";
+          default = false;
+        }
+        {
+          name = "close";
+          description = "file or directory closed, regardless of read/write mode";
+          default = false;
+        }
+        {
+          name = "open";
+          description = "file or directory opened";
+          default = false;
+        }
+        {
+          name = "moved_to";
+          description = "file or directory moved to watched directory";
+          default = true;
+        }
+        {
+          name = "moved_from";
+          description = "file or directory moved from watched directory";
+          default = false;
+        }
+        {
+          name = "move";
+          description = "file or directory moved to or from watched directory ";
+          default = false;
+        }
+        {
+          name = "move_self";
+          description = "A watched file or directory was moved.";
+          default = false;
+        }
+        {
+          name = "create";
+          description = "file or directory created within watched directory";
+          default = true;
+        }
+        {
+          name = "delete";
+          description = "file or directory deleted within watched directory";
+          default = false;
+        }
+        {
+          name = "delete_self";
+          description = "file or directory was deleted";
+          default = false;
+        }
+        {
+          name = "unmount";
+          description = "file system containing file or directory unmounted";
+          default = false;
+        }
+      ];
+  directoryOption =
+    { name, ... }:
+    let
+      innerCfg = cfg.directories.${name};
+      regexOpt =
+        description:
+        mkOption {
+          type = nullOr str;
+          default = null;
+          description = "${description} matching the extended regular expression";
+        };
+    in
+    {
+      options = {
+        recursive = mkOption {
+          type = bool;
+          description = ''Wether to watch the directory recursively'';
+          default = cfg.recursive;
+        };
+        match = {
+          exclude = regexOpt "Exclude all events on files";
+          excludei = regexOpt "like exclude but case insensitive";
+          include = regexOpt "Exclude all events on files except the ones";
+          includei = regexOpt "Like --include but case insensitive";
+        };
+        command = mkOption {
+          type = str;
+          example = "typst c $1";
+          description = ''
+            command to execute on all files matched by regex
+          '';
+        };
+        user = mkOption {
+          type = userNameType;
+          description = ''
+            the username under which to run the service for this dir.
+            defaults to the one declared at the service level
+          '';
+          default = cfg.user;
+        };
+        ifOutputOlder = mkOption {
+          type = nullOr str;
+          description = ''
+            provide a path to a executable that when called outputs the path of the file that would be created
+            if provided use make to guarantee the
+            the output file is only updated if the input is newer
+          '';
+          default = null;
+        };
+        notifications = notifications innerCfg;
+      };
+    };
 in
 {
   options.services.fs-watcher = {
@@ -44,165 +202,7 @@ in
       default = true;
     };
     directories = mkOption {
-      type = attrsOf (
-        listOf (
-          submodule (
-            { name, ... }:
-            let
-              innerCfg = cfg.directories.${name};
-              regexOpt =
-                description:
-                mkOption {
-                  type = nullOr str;
-                  default = null;
-                  description = "${description} matching the extended regular expression";
-                };
-            in
-            {
-              options = {
-                recursive = mkOption {
-                  type = bool;
-                  description = ''Wether to watch the directory recursively'';
-                  default = cfg.recursive;
-                };
-                match = {
-                  exclude = regexOpt "Exclude all events on files";
-                  excludei = regexOpt "like exclude but case insensitive";
-                  include = regexOpt "Exclude all events on files except the ones";
-                  includei = regexOpt "Like --include but case insensitive";
-                };
-                command = mkOption {
-                  type = str;
-                  example = "typst c $1";
-                  description = ''
-                    command to execute on all files matched by regex
-                  '';
-                };
-                user = mkOption {
-                  type = userNameType;
-                  description = ''
-                    the username under which to run the service for this dir.
-                    defaults to the one declared at the service level
-                  '';
-                  default = cfg.user;
-                };
-                ifOutputOlder = mkOption {
-                  type = nullOr str;
-                  description = ''
-                    provide a path to a executable that when called outputs the path of the file that would be created
-                    if provided use make to guarantee the
-                    the output file is only updated if the input is newer
-                  '';
-                  default = null;
-                };
-                notifications =
-                  mapListToAttrs
-                    (set: {
-
-                      inherit (set) name;
-                      value = {
-                        enable = mkOption {
-                          type = bool;
-                          inherit (set) default;
-                          description = ''
-                            wether to watch for changes of kind:
-                            ${set.description}
-                          '';
-                        };
-                        command = mkOption {
-                          type = str;
-                          default = innerCfg.command;
-                          description = ''
-                            The command to execute on change:
-                            ${set.description}
-                            Defaults to the one defined one level above
-                          '';
-                        };
-
-                      };
-                    })
-                    [
-                      {
-                        name = "access";
-                        description = "file or directory contents were read";
-                        default = false;
-                      }
-                      {
-                        name = "modify";
-                        description = "file or directory contents were written";
-                        default = true;
-                      }
-                      {
-                        name = "attrib";
-                        description = "file or directory attributes changed";
-                        default = false;
-                      }
-                      {
-                        name = "close_write";
-                        description = "file or directory closed, after being opened in writable mode";
-                        default = true;
-                      }
-                      {
-                        name = "close_nowrite";
-                        description = "file or directory closed, after being opened in read-only mode";
-                        default = false;
-                      }
-                      {
-                        name = "close";
-                        description = "file or directory closed, regardless of read/write mode";
-                        default = false;
-                      }
-                      {
-                        name = "open";
-                        description = "file or directory opened";
-                        default = false;
-                      }
-                      {
-                        name = "moved_to";
-                        description = "file or directory moved to watched directory";
-                        default = true;
-                      }
-                      {
-                        name = "moved_from";
-                        description = "file or directory moved from watched directory";
-                        default = false;
-                      }
-                      {
-                        name = "move";
-                        description = "file or directory moved to or from watched directory ";
-                        default = false;
-                      }
-                      {
-                        name = "move_self";
-                        description = "A watched file or directory was moved.";
-                        default = false;
-                      }
-                      {
-                        name = "create";
-                        description = "file or directory created within watched directory";
-                        default = true;
-                      }
-                      {
-                        name = "delete";
-                        description = "file or directory deleted within watched directory";
-                        default = false;
-                      }
-                      {
-                        name = "delete_self";
-                        description = "file or directory was deleted";
-                        default = false;
-                      }
-                      {
-                        name = "unmount";
-                        description = "file system containing file or directory unmounted";
-                        default = false;
-                      }
-                    ];
-              };
-            }
-          )
-        )
-      );
+      type = attrsOf (listOf (submodule directoryOption));
     };
   };
   config =
