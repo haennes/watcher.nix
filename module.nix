@@ -30,112 +30,109 @@ let
     ;
   userNameType = passwdEntry str;
   mapListToAttrs = f: list: listToAttrs (map f list);
+  notification_options_source = [
+    {
+      name = "access";
+      description = "file or directory contents were read";
+      default = false;
+    }
+    {
+      name = "modify";
+      description = "file or directory contents were written";
+      default = true;
+    }
+    {
+      name = "attrib";
+      description = "file or directory attributes changed";
+      default = false;
+    }
+    {
+      name = "close_write";
+      description = "file or directory closed, after being opened in writable mode";
+      default = true;
+    }
+    {
+      name = "close_nowrite";
+      description = "file or directory closed, after being opened in read-only mode";
+      default = false;
+    }
+    {
+      name = "close";
+      description = "file or directory closed, regardless of read/write mode";
+      default = false;
+    }
+    {
+      name = "open";
+      description = "file or directory opened";
+      default = false;
+    }
+    {
+      name = "moved_to";
+      description = "file or directory moved to watched directory";
+      default = true;
+    }
+    {
+      name = "moved_from";
+      description = "file or directory moved from watched directory";
+      default = false;
+    }
+    {
+      name = "move";
+      description = "file or directory moved to or from watched directory ";
+      default = false;
+    }
+    {
+      name = "move_self";
+      description = "A watched file or directory was moved.";
+      default = false;
+    }
+    {
+      name = "create";
+      description = "file or directory created within watched directory";
+      default = true;
+    }
+    {
+      name = "delete";
+      description = "file or directory deleted within watched directory";
+      default = false;
+    }
+    {
+      name = "delete_self";
+      description = "file or directory was deleted";
+      default = false;
+    }
+    {
+      name = "unmount";
+      description = "file system containing file or directory unmounted";
+      default = false;
+    }
+  ];
   notifications =
     innerCfg:
-    mapListToAttrs
-      (set: {
+    mapListToAttrs (set: {
 
-        inherit (set) name;
-        value = {
-          enable = mkOption {
-            type = bool;
-            inherit (set) default;
-            description = ''
-              wether to watch for changes of kind:
-              ${set.description}
-            '';
-          };
-          command = mkOption {
-            type = str;
-            default = innerCfg.command;
-            description = ''
-              The command to execute on change:
-              ${set.description}
-              Defaults to the one defined one level above
-            '';
-          };
-
+      inherit (set) name;
+      value = {
+        enable = mkOption {
+          type = bool;
+          inherit (set) default;
+          description = ''
+            wether to watch for changes of kind:
+            ${set.description}
+          '';
         };
-      })
-      notifications
-      innerCfg
-      [
-        {
-          name = "access";
-          description = "file or directory contents were read";
-          default = false;
-        }
-        {
-          name = "modify";
-          description = "file or directory contents were written";
-          default = true;
-        }
-        {
-          name = "attrib";
-          description = "file or directory attributes changed";
-          default = false;
-        }
-        {
-          name = "close_write";
-          description = "file or directory closed, after being opened in writable mode";
-          default = true;
-        }
-        {
-          name = "close_nowrite";
-          description = "file or directory closed, after being opened in read-only mode";
-          default = false;
-        }
-        {
-          name = "close";
-          description = "file or directory closed, regardless of read/write mode";
-          default = false;
-        }
-        {
-          name = "open";
-          description = "file or directory opened";
-          default = false;
-        }
-        {
-          name = "moved_to";
-          description = "file or directory moved to watched directory";
-          default = true;
-        }
-        {
-          name = "moved_from";
-          description = "file or directory moved from watched directory";
-          default = false;
-        }
-        {
-          name = "move";
-          description = "file or directory moved to or from watched directory ";
-          default = false;
-        }
-        {
-          name = "move_self";
-          description = "A watched file or directory was moved.";
-          default = false;
-        }
-        {
-          name = "create";
-          description = "file or directory created within watched directory";
-          default = true;
-        }
-        {
-          name = "delete";
-          description = "file or directory deleted within watched directory";
-          default = false;
-        }
-        {
-          name = "delete_self";
-          description = "file or directory was deleted";
-          default = false;
-        }
-        {
-          name = "unmount";
-          description = "file system containing file or directory unmounted";
-          default = false;
-        }
-      ];
+        command = mkOption {
+          type = str;
+          default = innerCfg.command;
+          description = ''
+            The command to execute on change:
+            ${set.description}
+            Defaults to the one defined one level above
+          '';
+        };
+
+      };
+    }) notification_options_source;
   directoryOption =
     { name, ... }:
     let
