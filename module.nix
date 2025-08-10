@@ -239,13 +239,13 @@ in
         in
         #FIXME add more time information without using colons as this trips up Make
         pkgs.writeShellScript name ''
-          ${pkgs.inotify-tools}/bin/inotifywait ${folderName} -m ${concatStringsSep " " eventsOpts} ${
+          ${pkgs.inotify-tools}/bin/inotifywait -m ${concatStringsSep " " eventsOpts} ${
             optionalString (match.include != null) "--include ${match.include}"
           } ${optionalString (match.includei != null) "--includei ${match.includei}"} ${
             optionalString (match.exclude != null) "--exclude ${match.exclude}"
           } ${
             optionalString (match.excludei != null) "--excludei ${match.excludei}"
-          } ${optionalString recursive "--recursive"} --format '%w${delim}%f${delim}%w%f${delim}%e${delim}%T' --timefmt "%s" | while IFS= read; do
+          } ${optionalString recursive "--recursive"} --format '%w${delim}%f${delim}%w%f${delim}%e${delim}%T' --timefmt "%s" ${folderName} | while IFS= read; do
             echo $REPLY
             export dir=${cut 1}
             export file=${cut 2}
